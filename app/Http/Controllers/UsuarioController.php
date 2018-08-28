@@ -104,7 +104,7 @@ class UsuarioController extends Controller
             {
                 $usuario->update(['status'=> $request->novo_status]);
 
-                return response(['sucesso' => true, 'mensagem' => 'Status atualizado com sucesso.']);
+                return response(['sucesso' => true, 'mensagem' => 'Status atualizado com sucesso.', 'usuario' => $usuario]);
             }
 
             return response(['sucesso' => false, 'mensagem' => 'O usuário informado não existe.']);
@@ -115,55 +115,70 @@ class UsuarioController extends Controller
 
     public function atribuirUniversidade(Request $request)
     {
-        if($request->has(['universidade_id', 'usuario_id']))
+        if($request->has(['universidades', 'usuario_id']))
         {
-            $universidade = Universidade::find($request->universidade_id);
             $usuario = Usuario::find($request->usuario_id);
 
-            if(!is_null($universidade))
+            if(!is_null($usuario))
             {
-                if(!is_null($usuario))
-                {
-                    try {
-                        DB::beginTransaction();
 
-                        $newUniversidadeUsuarioPivot = new UniversidadeUsuarioPivot();
-                        $newUniversidadeUsuarioPivot->universidade_id = $request->universidade_id;
-                        $newUniversidadeUsuarioPivot->usuario_id = $request->usuario_id;
-                        $newUniversidadeUsuarioPivot->save();
+                $universidades = array();
+                $universidades = json_decode($request->universidades);
 
-                        $permissao_pivot = PermissaoUsuarioPivot::where('usuario_id', $usuario->id)->first();
+                try {
+                    DB::beginTransaction();
 
-                        //se o usuário ainda não foi aprovado em nenhuma universidade então devemos atribuir sua permissão para o caso inicial
-                        //caso contrário não é necessário criar novos pivots para a mesma permissão
-                        if(is_null($permissao_pivot))
+                    foreach($universidades as $universidade_id)
+                    {
+                        $universidade = Universidade::find($universidade_id);
+
+                        if(!is_null($universidade))
                         {
-                            $usuario->status = "aprovado";
-                            $usuario->save();
+                            $newUniversidadeUsuarioPivot = new UniversidadeUsuarioPivot();
+                            $newUniversidadeUsuarioPivot->universidade_id = $universidade_id;
+                            $newUniversidadeUsuarioPivot->usuario_id = $request->usuario_id;
+                            $newUniversidadeUsuarioPivot->save();
 
-                            $permissao = Permissao::where('rota', 'api/usuario/')->first();
+                            $permissao_pivot = PermissaoUsuarioPivot::where('usuario_id', $usuario->id)->first();
 
-                            $newPermissaoUsuarioPivot = new PermissaoUsuarioPivot();
-                            $newPermissaoUsuarioPivot->permissao_id = $permissao->id;
-                            $newPermissaoUsuarioPivot->usuario_id = $usuario->id;
-                            $newPermissaoUsuarioPivot->save();
+                            //se o usuário ainda não foi aprovado em nenhuma universidade então devemos atribuir sua permissão para o caso inicial
+                            //caso contrário não é necessário criar novos pivots para a mesma permissão
+                            if(is_null($permissao_pivot))
+                            {
+                                $permissao = Permissao::where('rota', 'api/usuario/')->first();
+
+                                $newPermissaoUsuarioPivot = new PermissaoUsuarioPivot();
+                                $newPermissaoUsuarioPivot->permissao_id = $permissao->id;
+                                $newPermissaoUsuarioPivot->usuario_id = $usuario->id;
+                                $newPermissaoUsuarioPivot->save();
+                            }
                         }
-
-                        DB::commit();
-                        return response(['sucesso' => true, 'mensagem' => 'O usuário '.$usuario->nome.' foi aceito na universidade '.$universidade->nome.'.']);
-
-                    } catch (\Exception $e) {
-                        DB::rollback();
-                        return response(['sucesso' => false, 'mensagem' => 'Um erro interno ocorreu: '.$e->getMessage()]);
+                        else
+                        {
+                            DB::rollback();
+                            return response(['sucesso' => false, 'mensagem' => 'A universidade informada não existe: '.$universidade_id]);
+                        }
                     }
-                }
+                    
+                    DB::commit();
+                    return response(['sucesso' => true, 'mensagem' => 'Operação concluida com sucesso.']);
 
-                return response(['sucesso' => false, 'mensagem' => 'O usuário informado não existe']);
+                } catch (\Exception $e) {
+                    DB::rollback();
+                    return response(['sucesso' => false, 'mensagem' => 'Um erro interno ocorreu: '.$e->getMessage()]);
+                }
+               
             }
 
-            return response(['sucesso' => false, 'mensagem' => 'A universidade informada não existe']);
+            return response(['sucesso' => false, 'mensagem' => 'O usuário informado não existe']);
         }
 
         return response(['sucesso' => false, 'mensagem' => 'Forneça todos os campos obrigatórios']);
+    }
+
+    public function listarTodos(Request $request)
+    {
+        $usuarios_pendentes = Usuario::whereNotNull('status')->orderBy('created_at', 'desc')->get();
+        return response(['sucesso' => true, 'mensagem' => 'Usuários pendentes listados com sucesso.', 'usuarios' => $usuarios_pendentes]);
     }
 }

@@ -26,6 +26,8 @@ class LoginController extends Controller
                     $usuario->token = md5($request->email.$carbon->timestamp);
                     $usuario->save();
 
+                    $usuario->permitido = true;
+
                     return response(['sucesso' => true,'mensagem' => 'Usuario autenticado com sucesso.', 'usuario' => $usuario]);
                 }
 

@@ -43,5 +43,7 @@ class PermissoesMiddleware
 
             return response(['sucesso' => false, 'mensagem' => 'Você não possui permissão para acessar o sistema.']);
         }
+
+        return response(['sucesso' => false, 'mensagem' => 'Token inválido.']);
     }
 }

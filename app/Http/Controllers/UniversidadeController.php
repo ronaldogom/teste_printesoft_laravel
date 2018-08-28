@@ -25,4 +25,10 @@ class UniversidadeController extends Controller
 
         return response(['sucesso' => false, 'mensagem' => 'Por favor forneça todos os dados obrigatórios']);
     }
+
+    public function listarTodas(Request $request)
+    {
+        $universidades = Universidade::all();
+        return response(['sucesso' => true, 'mensagem' => 'Universidades listadas com sucesso', 'universidades' => $universidades]);
+    }
 }
