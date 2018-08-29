@@ -14,7 +14,7 @@ Route::prefix('admin')->group(function()
         Route::post('entrar', 'Auth\LoginController@autenticar');//AUTENTICAR USUÁRIO //testado
         Route::post('universidade/cadastrar', 'UniversidadeController@cadastrar'); //CADASTRAR UNIVERSIDADES //testado
         Route::post('universidade/listar', 'UniversidadeController@listarTodas'); //LISTAR UNIVERSIDADES //testado
-        Route::post('usuario/status/atualiziar', 'UsuarioController@atualizarStatus'); //LISTAR UNIVERSIDADES //testado
+        Route::post('usuario/status/atualizar', 'UsuarioController@atualizarStatus'); //LISTAR UNIVERSIDADES //testado
         Route::post('usuario/listar', 'UsuarioController@listarTodos'); //LISTAR USUÁRIOS PENDENTES //testado
         Route::post('usuario/universidade/atribuir', 'UsuarioController@atribuirUniversidade'); //ATUALIZAR STATUS DOS USUÁRIOS //testado
     });

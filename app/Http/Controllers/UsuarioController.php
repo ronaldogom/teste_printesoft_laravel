@@ -96,8 +96,6 @@ class UsuarioController extends Controller
 
     public function atualizarStatus(Request $request)
     {
-
-        dd($request->usuario_id);
         if($request->has(['usuario_id', 'novo_status']))
         {
             $usuario = Usuario::find($request->usuario_id);
